@@ -24,8 +24,11 @@ function Install-Apps() {
 
     # Install PowerShell Modules
     Write-Host "Installing PowerShell Modules..." -ForegroundColor "Yellow"
-    Install-Module Posh-Git -Scope CurrentUser -Force
+    Install-Module PowershellGet -Scope CurrentUser -Force
     Install-Module PSWindowsUpdate -Scope CurrentUser -Force
+    Install-Module PSReadLine -Scope CurrentUser -AllowPrerelease -Force
+    Install-Module Posh-Git -Scope CurrentUser -Force
+    Install-Module Oh-My-Posh -Scope CurrentUser -AllowPrerelease -Force
 
 
     # Chocolatey
@@ -46,10 +49,10 @@ function Install-Apps() {
     choco install python              --limit-output
     choco install explorerplusplus    --limit-output
     choco install ruby                --limit-output
-    choco install 7zip                --limit-output
+    winget install 7zip.7zip
 
     ## fonts
-    choco install sourcecodepro       --limit-output
+    #choco install sourcecodepro       --limit-output
 
     ## browsers
     choco install GoogleChrome        --limit-output
@@ -58,8 +61,21 @@ function Install-Apps() {
     choco install neovim              --limit-output
     choco install winmerge            --limit-output
     choco install conemu              --limit-output
-
+    choco install vscode              --limit-output
     choco install paint.net           --limit-output
+    WinGet install WinMerge.WinMerge
+    WinGet install Microsoft.WinDbg
+    choco install everything --params "/start-menu-shortcuts /run-on-system-startup" --limit-output
+    choco install ueli                --limit-output
+    choco install repoz               --limit-output
+
+    ## better experience
+    WinGet install powertoys
+    WinGet install QL-Win.QuickLook
+    WinGet install File-New-Project.EarTrumpet
+    WinGet install NirSoft.ShellExView
+    WinGet install AntibodySoftware.WizTree
+    choco install alt-tab-terminator  --limit-output
 
     Refresh-Environment
 

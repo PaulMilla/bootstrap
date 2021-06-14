@@ -1,11 +1,31 @@
-# Check to see if we are currently running "as Administrator"
-if (!(Verify-Elevated)) {
-   $newProcess = new-object System.Diagnostics.ProcessStartInfo "PowerShell";
-   $newProcess.Arguments = $myInvocation.MyCommand.Definition;
-   $newProcess.Verb = "runas";
-   [System.Diagnostics.Process]::Start($newProcess);
+Function Test-CommandExists ($command) {
+    $oldPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'stop'
+    Try {
+        if (Get-Command $command) {
+            return $true
+        }
+    }
+    Catch {
+        return $false
+    }
+    Finally {
+        $ErrorActionPreference = $oldPreference
+    }
+}
 
-   exit
+# Check to see if we are currently running "as Administrator"
+if ((Test-CommandExists "Verify-Elevated") -and !(Verify-Elevated)) {
+    $newProcess = new-object System.Diagnostics.ProcessStartInfo "PowerShell";
+    $newProcess.Arguments = $myInvocation.MyCommand.Definition;
+    $newProcess.Verb = "runas";
+    [System.Diagnostics.Process]::Start($newProcess);
+
+    exit
+}
+else {
+    Write-Host -NoNewline "Can't verify if this is an Administrator shell. Only continue if it is..."
+    $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
 }
 
 
@@ -35,7 +55,7 @@ function Install-Apps() {
     Write-Host "Installing Desktop Utilities..." -ForegroundColor "Yellow"
     if ($null -eq (which cinst)) {
         Invoke-Expression (new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1')
-        Refresh-Environment
+        RefreshEnv.cmd
         choco feature enable -n=allowGlobalConfirmation
     }
 
@@ -53,6 +73,7 @@ function Install-Apps() {
 
     ## fonts
     #choco install sourcecodepro       --limit-output
+    choco install nerdfont-hack --limit-output
 
     ## browsers
     choco install GoogleChrome        --limit-output
@@ -62,6 +83,7 @@ function Install-Apps() {
     choco install winmerge            --limit-output
     choco install conemu              --limit-output
     choco install vscode              --limit-output
+    choco install visualstudio2019enterprise --limit-output
     choco install paint.net           --limit-output
     WinGet install WinMerge.WinMerge
     WinGet install Microsoft.WinDbg
@@ -75,42 +97,50 @@ function Install-Apps() {
     WinGet install File-New-Project.EarTrumpet
     WinGet install NirSoft.ShellExView
     WinGet install AntibodySoftware.WizTree
-    choco install alt-tab-terminator  --limit-output
+    # choco install alt-tab-terminator  --limit-output
 
-    Refresh-Environment
+    RefreshEnv.cmd
 
 
     # NodeJS Setup
-    nvm on
-    $nodeLtsVersion = choco search nodejs-lts --limit-output | ConvertFrom-String -TemplateContent "{Name:package-name}\|{Version:1.11.1}" | Select-Object -ExpandProperty "Version"
-    nvm install $nodeLtsVersion
-    nvm use $nodeLtsVersion
-    Remove-Variable nodeLtsVersion
+    if (Test-CommandExists "nvm") {
+        Write-Host "Installing NodeJS..." -ForegroundColor "Yellow"
+        nvm on
+        $nodeLtsVersion = choco search nodejs-lts --limit-output | ConvertFrom-String -TemplateContent "{Name:package-name}\|{Version:1.11.1}" | Select-Object -ExpandProperty "Version"
+        nvm install $nodeLtsVersion
+        nvm use $nodeLtsVersion
+        Remove-Variable nodeLtsVersion
 
-
-    ## Node Packages
-    Write-Host "Installing Node Packages..." -ForegroundColor "Yellow"
-    if (which npm) {
+        Write-Host "Installing Node Packages..." -ForegroundColor "Yellow"
         npm update npm
         npm install -g gulp
         npm install -g mocha
         npm install -g node-inspector
         npm install -g yo
     }
-
-
-    # Ruby Setup
-    gem pristine --all --env-shebang
-
-
-    # Janus for vim
-    ## https://github.com/carlhuda/janus
-    ## This is a distribution of plug-ins and mappings for Vim, Gvim and MacVim.
-    ## Some plugins include: CtrlP, NERDCommenter NERDTree, Syntastic, vim-multiple-cursors, etc.
-    Write-Host "Installing Janus..." -ForegroundColor "Yellow"
-    if ((which curl) -and (which vim) -and (which rake) -and (which bash)) {
-        curl.exe -L https://bit.ly/janus-bootstrap | bash
+    else {
+        Write-Host -ForegroundColor Red "Couldn't setup NodeJS. Might need to restart PC before nvm is available"
     }
+
+
+    # Ruby & Janus setup (Vim)
+    if (Test-CommandExists "gem") {
+        gem pristine --all --env-shebang
+        
+        # Janus for vim
+        ## https://github.com/carlhuda/janus
+        ## This is a distribution of plug-ins and mappings for Vim, Gvim and MacVim.
+        ## Some plugins include: CtrlP, NERDCommenter NERDTree, Syntastic, vim-multiple-cursors, etc.
+        if ((which curl) -and (which vim) -and (which rake) -and (which bash)) {
+            Write-Host "Installing Janus..." -ForegroundColor "Yellow"
+            curl.exe -L https://bit.ly/janus-bootstrap | bash
+        }
+    }
+    else {
+        Write-Host -ForegroundColor Red "Couldn't setup Ruby gem with Janus (vim plugins)" 
+    }
+
+
 
 
     # Windows Features
@@ -146,7 +176,12 @@ function Install-Apps() {
         -NoRestart | Out-Null
 
     # Web Platform Installer for remaining Windows features
-    webpicmd /Install /AcceptEula /Products:"UrlRewrite2"
+    if (Test-CommandExists "wbpicmd") {
+        webpicmd /Install /AcceptEula /Products:"UrlRewrite2"
+    }
+    else {
+        Write-Host -ForegroundColor Red "Couldn't install UrlRewrite2"
+    }
 }
 
 Install-Apps

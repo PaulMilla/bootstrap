@@ -17,14 +17,35 @@ param (
     [string]$setLinuxDistroUri = "https://aka.ms/wsl-debian-gnulinux"
 )
 
+Function Test-CommandExists ($command) {
+    $oldPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'stop'
+    Try {
+        if (Get-Command $command) {
+            return $true
+        }
+    }
+    Catch {
+        return $false
+    }
+    Finally {
+        $ErrorActionPreference = $oldPreference
+    }
+}
+
+
 # Check to see if we are currently running "as Administrator"
-if (!(Verify-Elevated)) {
+if ((Test-CommandExists "Verify-Elevated") -and !(Verify-Elevated)) {
    $newProcess = new-object System.Diagnostics.ProcessStartInfo "PowerShell";
    $newProcess.Arguments = $myInvocation.MyCommand.Definition;
    $newProcess.Verb = "runas";
    [System.Diagnostics.Process]::Start($newProcess);
 
    exit
+}
+else {
+    Write-Host -NoNewline "Can't verify if this is an Administrator shell. Only continue if it is..."
+    $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
 }
 
 <# TODO: These can probaby be moved to a .reg file instead #>
@@ -260,11 +281,11 @@ function Set-Registry() {
     Set-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" "ConfirmFileDelete" 0
 
     # Sync Settings: Disable automatically syncing settings with other Windows 10 devices
-    Set-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\SettingSync\Groups\Personalization" "Enabled" 0 # Theme
-    Set-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\SettingSync\Groups\Credentials" "Enabled" 0     # Passwords
-    Set-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\SettingSync\Groups\Language" "Enabled" 0        # Language
-    Set-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\SettingSync\Groups\Accessibility" "Enabled" 0   # Accessibility / Ease of Access
-    Set-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\SettingSync\Groups\Windows" "Enabled" 0         # Other Windows Settings
+    # Set-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\SettingSync\Groups\Personalization" "Enabled" 0 # Theme
+    # Set-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\SettingSync\Groups\Credentials" "Enabled" 0     # Passwords
+    # Set-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\SettingSync\Groups\Language" "Enabled" 0        # Language
+    # Set-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\SettingSync\Groups\Accessibility" "Enabled" 0   # Accessibility / Ease of Access
+    # Set-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\SettingSync\Groups\Windows" "Enabled" 0         # Other Windows Settings
     #Set-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\SettingSync\Groups\BrowserSettings" "Enabled" 0 # Internet Explorer (Removed in 1903)
 
     ###############################################################################

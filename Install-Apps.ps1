@@ -98,6 +98,7 @@ function Install-Apps() {
     WinGet install NirSoft.ShellExView
     WinGet install AntibodySoftware.WizTree
     WinGet install Lexikos.AutoHotkey
+    choco install freecommander-xe.install --limit-output
     # choco install alt-tab-terminator  --limit-output
 
     RefreshEnv.cmd

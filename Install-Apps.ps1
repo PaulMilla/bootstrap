@@ -73,7 +73,7 @@ function Install-Apps() {
 
     ## fonts
     #choco install sourcecodepro       --limit-output
-    choco install nerdfont-hack --limit-output
+    choco install nerdfont-hack       --limit-output
 
     ## browsers
     choco install GoogleChrome        --limit-output
@@ -97,6 +97,7 @@ function Install-Apps() {
     WinGet install File-New-Project.EarTrumpet
     WinGet install NirSoft.ShellExView
     WinGet install AntibodySoftware.WizTree
+    WinGet install Lexikos.AutoHotkey
     # choco install alt-tab-terminator  --limit-output
 
     RefreshEnv.cmd

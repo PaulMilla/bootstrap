@@ -30,9 +30,12 @@ else {
 
 
 function Install-Apps() {
+    # https://docs.microsoft.com/en-us/powershell/scripting/gallery/installing-psget
+    [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+
     # Update Help for Modules
     Write-Host "Updating Help..." -ForegroundColor "Yellow"
-    Update-Help -Force
+    #Update-Help -Force
 
     # Package Providers
     Write-Host "Installing Package Providers..." -ForegroundColor "Yellow"
@@ -43,8 +46,9 @@ function Install-Apps() {
 
 
     # Install PowerShell Modules
+    # If having 'Access to the cloud file is denied': https://github.com/PowerShell/PowerShellGet/issues/300
     Write-Host "Installing PowerShell Modules..." -ForegroundColor "Yellow"
-    Install-Module PowershellGet -Scope CurrentUser -Force
+    Install-Module PowershellGet -Scope CurrentUser -Force -MinimumVersion 3.0.11-beta -AllowPrerelease
     Install-Module PSWindowsUpdate -Scope CurrentUser -Force
     Install-Module PSReadLine -Scope CurrentUser -AllowPrerelease -Force
     Install-Module Posh-Git -Scope CurrentUser -Force
@@ -53,7 +57,7 @@ function Install-Apps() {
 
     # Chocolatey
     Write-Host "Installing Desktop Utilities..." -ForegroundColor "Yellow"
-    if ($null -eq (which cinst)) {
+    if (!(Test-CommandExists 'choco')) {
         Invoke-Expression (new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1')
         RefreshEnv.cmd
         choco feature enable -n=allowGlobalConfirmation

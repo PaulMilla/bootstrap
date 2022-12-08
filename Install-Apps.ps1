@@ -96,7 +96,7 @@ function Install-Apps {
     ## dev tools and frameworks
     winget install Neovim.Neovim
     winget install Maximus5.ConEmu
-    winget install Microsoft.VisualStudioCode
+    winget install Microsoft.VisualStudioCode --override '/SILENT /mergetasks="!runcode,addcontextmenufiles,addcontextmenufolders"'
     winget install OliverSchwendener.ueli
     choco install paint.net           --limit-output
 

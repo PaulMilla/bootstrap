@@ -29,7 +29,15 @@ else {
 }
 
 
-function Install-Apps() {
+function Install-Apps {
+    [CmdletBinding()]
+    param (
+        # Linux Distro
+        # Select a distro url at: https://docs.microsoft.com/en-us/windows/wsl/install-manual#downloading-distros
+        # Or empty for none
+        [Parameter()]
+        [string]$setLinuxDistroUri = "https://aka.ms/wsl-debian-gnulinux"
+    )
     # https://docs.microsoft.com/en-us/powershell/scripting/gallery/installing-psget
     [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 
@@ -52,7 +60,7 @@ function Install-Apps() {
     Install-Module PSWindowsUpdate -Scope CurrentUser -Force
     Install-Module PSReadLine -Scope CurrentUser -AllowPrerelease -Force
     Install-Module Posh-Git -Scope CurrentUser -Force
-    Install-Module Oh-My-Posh -Scope CurrentUser -AllowPrerelease -Force
+    #Install-Module Oh-My-Posh -Scope CurrentUser -AllowPrerelease -Force
 
 
     # Chocolatey
@@ -66,128 +74,55 @@ function Install-Apps() {
     ## system and cli
     choco install powershell-core     --limit-output
     choco install curl                --limit-output
-    choco install nuget.commandline   --limit-output
-    choco install webpi               --limit-output
-    choco install git.install         --limit-output -params '"/GitAndUnixToolsOnPath /NoShellIntegration"'
-    choco install nvm.portable        --limit-output
-    choco install python              --limit-output
+    choco install python3             --limit-output
     choco install explorerplusplus    --limit-output
-    choco install ruby                --limit-output
+    choco install freecommander-xe.install --limit-output
+    winget install Git.Git
     winget install 7zip.7zip
+    winget install Microsoft.NuGet
+    winget install CoreyButler.NVMforWindows
+
+    #choco install ruby                --limit-output
+    #choco install webpi               --limit-output #Helps install IIS
+
 
     ## fonts
-    #choco install sourcecodepro       --limit-output
+    choco install sourcecodepro       --limit-output
     choco install nerdfont-hack       --limit-output
 
     ## browsers
-    choco install GoogleChrome        --limit-output
+    winget install Google.Chrome
 
     ## dev tools and frameworks
-    choco install neovim              --limit-output
-    choco install winmerge            --limit-output
-    choco install conemu              --limit-output
-    choco install vscode              --limit-output
-    choco install visualstudio2019enterprise --limit-output
+    winget install Neovim.Neovim
+    winget install Maximus5.ConEmu
+    winget install Microsoft.VisualStudioCode
+    winget install OliverSchwendener.ueli
     choco install paint.net           --limit-output
-    WinGet install WinMerge.WinMerge
-    WinGet install Microsoft.WinDbg
-    choco install everything --params "/start-menu-shortcuts /run-on-system-startup" --limit-output
-    choco install ueli                --limit-output
-    choco install repoz               --limit-output
+
+    #winget install WinMerge.WinMerge
+    #winget install Microsoft.WinDbg
+    #choco install repoz               --limit-output
 
     ## better experience
     WinGet install powertoys
     WinGet install QL-Win.QuickLook
     WinGet install File-New-Project.EarTrumpet
     WinGet install NirSoft.ShellExView
-    WinGet install AntibodySoftware.WizTree
     WinGet install Lexikos.AutoHotkey
-    choco install freecommander-xe.install --limit-output
-    # choco install alt-tab-terminator  --limit-output
+
+    #WinGet install AntibodySoftware.WizTree
+    #choco install alt-tab-terminator  --limit-output
+
+    # Windows Subsystem for Linux
+    if ($setLinuxDistroUri) {
+        Enable-WindowsOptionalFeature -Online -All -FeatureName "Microsoft-Windows-Subsystem-Linux" -NoRestart -WarningAction SilentlyContinue | Out-Null
+        Invoke-WebRequest -Uri $setLinuxDistroUri -OutFile linuxDistro.appx -UseBasicParsing
+        Add-AppxPackage .\linuxDistro.appx
+        Remove-Item linuxDistro.appx
+    }
 
     RefreshEnv.cmd
-
-
-    # NodeJS Setup
-    if (Test-CommandExists "nvm") {
-        Write-Host "Installing NodeJS..." -ForegroundColor "Yellow"
-        nvm on
-        $nodeLtsVersion = choco search nodejs-lts --limit-output | ConvertFrom-String -TemplateContent "{Name:package-name}\|{Version:1.11.1}" | Select-Object -ExpandProperty "Version"
-        nvm install $nodeLtsVersion
-        nvm use $nodeLtsVersion
-        Remove-Variable nodeLtsVersion
-
-        Write-Host "Installing Node Packages..." -ForegroundColor "Yellow"
-        npm update npm
-        npm install -g gulp
-        npm install -g mocha
-        npm install -g node-inspector
-        npm install -g yo
-    }
-    else {
-        Write-Host -ForegroundColor Red "Couldn't setup NodeJS. Might need to restart PC before nvm is available"
-    }
-
-
-    # Ruby & Janus setup (Vim)
-    if (Test-CommandExists "gem") {
-        gem pristine --all --env-shebang
-        
-        # Janus for vim
-        ## https://github.com/carlhuda/janus
-        ## This is a distribution of plug-ins and mappings for Vim, Gvim and MacVim.
-        ## Some plugins include: CtrlP, NERDCommenter NERDTree, Syntastic, vim-multiple-cursors, etc.
-        if ((which curl) -and (which vim) -and (which rake) -and (which bash)) {
-            Write-Host "Installing Janus..." -ForegroundColor "Yellow"
-            curl.exe -L https://bit.ly/janus-bootstrap | bash
-        }
-    }
-    else {
-        Write-Host -ForegroundColor Red "Couldn't setup Ruby gem with Janus (vim plugins)" 
-    }
-
-
-
-
-    # Windows Features
-    Write-Host "Installing Windows Features..." -ForegroundColor "Yellow"
-
-    # IIS Base Configuration
-    Enable-WindowsOptionalFeature -Online -All -FeatureName `
-        "IIS-BasicAuthentication", `
-        "IIS-DefaultDocument", `
-        "IIS-DirectoryBrowsing", `
-        "IIS-HttpCompressionDynamic", `
-        "IIS-HttpCompressionStatic", `
-        "IIS-HttpErrors", `
-        "IIS-HttpLogging", `
-        "IIS-ISAPIExtensions", `
-        "IIS-ISAPIFilter", `
-        "IIS-ManagementConsole", `
-        "IIS-RequestFiltering", `
-        "IIS-StaticContent", `
-        "IIS-WebSockets", `
-        "IIS-WindowsAuthentication" `
-        -NoRestart | Out-Null
-
-    # ASP.NET Base Configuration
-    Enable-WindowsOptionalFeature -Online -All -FeatureName `
-        "NetFx3", `
-        "NetFx4-AdvSrvs", `
-        "NetFx4Extended-ASPNET45", `
-        "IIS-NetFxExtensibility", `
-        "IIS-NetFxExtensibility45", `
-        "IIS-ASPNET", `
-        "IIS-ASPNET45" `
-        -NoRestart | Out-Null
-
-    # Web Platform Installer for remaining Windows features
-    if (Test-CommandExists "wbpicmd") {
-        webpicmd /Install /AcceptEula /Products:"UrlRewrite2"
-    }
-    else {
-        Write-Host -ForegroundColor Red "Couldn't install UrlRewrite2"
-    }
 }
 
 Install-Apps

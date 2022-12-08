@@ -105,7 +105,7 @@ function Install-Apps {
     #choco install repoz               --limit-output
 
     ## better experience
-    WinGet install powertoys
+    winget install Microsoft.PowerToys --source winget
     WinGet install QL-Win.QuickLook
     WinGet install File-New-Project.EarTrumpet
     WinGet install NirSoft.ShellExView

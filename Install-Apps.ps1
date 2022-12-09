@@ -81,6 +81,7 @@ function Install-Apps {
     winget install 7zip.7zip
     winget install Microsoft.NuGet
     winget install CoreyButler.NVMforWindows
+    winget install JanDeDobbeleer.OhMyPosh -s winget
 
     #choco install ruby                --limit-output
     #choco install webpi               --limit-output #Helps install IIS

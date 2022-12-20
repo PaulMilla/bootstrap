@@ -99,6 +99,7 @@ function Install-Apps {
     winget install Maximus5.ConEmu
     winget install Microsoft.VisualStudioCode --override '/SILENT /mergetasks="!runcode,addcontextmenufiles,addcontextmenufolders"'
     winget install OliverSchwendener.ueli
+    winget install Postman.Postman
     choco install paint.net           --limit-output
 
     #winget install WinMerge.WinMerge

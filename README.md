@@ -5,7 +5,8 @@
 When setting up a new Windows PC, you may want to set some Windows defaults and features, such as showing hidden files in Windows Explorer and installing IIS. This will also set your machine name and full user name, so you may want to modify this file before executing.
 
 ```posh
-.\Set-WindowsSettings.ps1
+.\Set-BasicWindowsSettings.ps1
+.\Set-WindowsSettings.ps1 # A much more expansive list of settings
 ```
 
 ## Install dependencies and packages
@@ -14,6 +15,7 @@ When setting up a new Windows box, you may want to install some common packages,
 
 ```posh
 .\Install-Apps.ps1
+.\Install-PSExtensions.ps1 # A set of PS Packages and Modules
 ```
 
 > The scripts will install Chocolatey, node.js, and WebPI if necessary.

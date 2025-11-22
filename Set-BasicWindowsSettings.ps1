@@ -141,6 +141,7 @@ Function Set-WindowsSettings {
     }
 }
 
+Test-Elevated
 Set-WindowsSettings
 Set-RegistryExplorer
 Set-RegistryAccessibility

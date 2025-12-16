@@ -91,6 +91,53 @@ path: $SymlinkDir
     Write-Host -ForegroundColor Yellow "Note: To use ``nvm use`` command without elevating, Windows settings need to have Developer Mode enabled to create symlinks."
 }
 
+function Install-PyEnvWindows {
+    [CmdletBinding()]
+    param(
+        [string]$InstallDir = "$env:LOCALAPPDATA\pyenv"
+    )
+
+    Write-Host "Installing pyenv-win to $InstallDir" -ForegroundColor Yellow
+
+    # Create install directory
+    if (!(Test-Path $InstallDir)) {
+        New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
+    }
+
+    # Clone pyenv-win repository
+    git clone https://github.com/pyenv-win/pyenv-win.git $InstallDir
+
+    # Set user environment variables (persist across sessions)
+    [Environment]::SetEnvironmentVariable("PYENV", $InstallDir, "User")
+    [Environment]::SetEnvironmentVariable("PYENV_HOME", "$InstallDir\pyenv-win", "User")
+    [Environment]::SetEnvironmentVariable("PYENV_ROOT", "$InstallDir\pyenv-win", "User")
+    Write-Host "Set PYENV, PYENV_HOME, PYENV_ROOT environment variables"
+
+    # Add to user PATH if not already present
+    $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
+    $pathsToAdd = @("$InstallDir\pyenv-win\bin", "$InstallDir\pyenv-win\shims")
+    $modified = $false
+    foreach ($p in $pathsToAdd) {
+        if ($userPath -notlike "*$p*") {
+            $userPath = "$userPath;$p"
+            $modified = $true
+        }
+    }
+    if ($modified) {
+        [Environment]::SetEnvironmentVariable("Path", $userPath, "User")
+        Write-Host "Added pyenv-win directories to user PATH"
+    }
+    # Set for current session
+    $env:PYENV = $InstallDir
+    $env:PYENV_HOME = "$InstallDir\pyenv-win"
+    $env:PYENV_ROOT = "$InstallDir\pyenv-win"
+    $env:Path = "$env:Path;$InstallDir\pyenv-win\bin;$InstallDir\pyenv-win\shims"
+
+    # Might need to run `pyenv update` to get latest versions
+    # If that fails might need to apply the fix here: https://github.com/pyenv-win/pyenv-win/issues/715#issuecomment-3139835392
+    # Replacing the broken pyenv-update.vbs file under the libexec folder
+    Write-Host -ForegroundColor Yellow "To install a Python version, run 'pyenv install 3.14' and set it with 'pyenv global 3.14'"
+}
 
 function Install-Apps {
     [CmdletBinding()]
